@@ -10,12 +10,23 @@
 <link href="./reset.css" rel="stylesheet" />
 <link href="./style.css" rel="stylesheet" />
 <link href="./media/file_type_html_icon_130541.svg" rel="icon" type="image/x-icon">
-<script src="./index.js" type="text/js"></script>
+<script defer src="./index.js"></script>
 
 </head>
 <body>
 
 <div id="root">
+  <div id="frame">
+    <div class="messages">
+      <p id="status" class="message">Welcome!</p>
+    </div>
+    <div class="buttons">
+      <button id="play" class="game-button" style="display: none;">Play</button>
+      <button id="rock" class="game-button" style="display: none;">Rock</button>
+      <button id="paper" class="game-button" style="display: none;">Paper</button>
+      <button id="scissors" class="game-button" style="display: none;">Scissors</button>
+    </div>
+  </div>
 </div>
 
 </body>

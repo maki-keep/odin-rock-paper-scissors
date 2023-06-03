@@ -1,15 +1,10 @@
-const prompt = require("prompt-sync")();
-
-const choices = ['rock', 'paper', 'scissors'];
+const choices = ["rock", "paper", "scissors"];
 
 class Player {
-  constructor(isUser) {
-    this.isUser = isUser;
+  constructor(props) {
+    this.isUser = typeof props !== "undefined" && Object.hasOwn(props, "isUser") ? props.isUser : false;
     this.score = 0;
   }
-
-  _isUser;
-  _score;
 
   get isUser() {
     return this._isUser;
@@ -26,11 +21,44 @@ class Player {
     }
   }
   set score(payload) {
-    this._score = payload;
+    if (typeof payload === "number") {
+      this._score = payload;
+    } else {
+      throw new Error("score must be a number.");
+    }
   }
 
   incrementScore() {
     this.score = this.score + 1;
+  }
+}
+
+class GameStats {
+  constructor() {
+    this.endCondition = false;
+    this.outcome = "";
+  }
+
+  get endCondition() {
+    return this._endCondition;
+  }
+  get outcome() {
+    return this._outcome;
+  }
+
+  set endCondition(payload) {
+    if (typeof payload === "boolean") {
+      this._endCondition = payload;
+    } else {
+      throw new Error("endCondition must be a boolean.");
+    }
+  }
+  set outcome(payload) {
+    if (typeof payload === "string") {
+      this._outcome = payload;
+    } else {
+      throw new Error("outcome must be a string.");
+    }
   }
 }
 
@@ -46,68 +74,120 @@ function getOutcome(userChoice, computerChoice) {
   let result;
   if (userChoice === getChoices()[0]) /* rock */ {
     if (computerChoice === getChoices()[1]) /* paper */ {
-      result = 'lost';
+      result = "lost";
     } else if (computerChoice === getChoices()[2]) /* scissors */ {
-      result = 'won';
+      result = "won";
     } else {
-      result = 'tied';
+      result = "tied";
     }
   } else if (userChoice === getChoices()[1]) /* paper */ {
     if (computerChoice === getChoices()[0]) /* rock */ {
-      result = 'won';
+      result = "won";
     } else if (computerChoice === getChoices()[2]) /* scissors */ {
-      result = 'lost';
+      result = "lost";
     } else {
-      result = 'tied';
+      result = "tied";
     }
   } else /* scissors */ {
     if (computerChoice === getChoices()[1]) /* paper */ {
-      result = 'won';
+      result = "won";
     } else if (computerChoice === getChoices()[0]) /* rock */ {
-      result = 'lost';
+      result = "lost";
     } else {
-      result = 'tied';
+      result = "tied";
     }
   }
   return result;
 }
 
-const userPlayer = new Player(true);
-const computerPlayer = new Player(false);
+function move(index) {
+  const {rockButton, paperButton, scissorsButton, playButton, statusMessage} = elements;
 
-console.log("0 - Rock\n1 - Paper\n2 - Scissors");
-let input;
-let valid = false;
-let endCondition = false;
-
-do {
-  input = prompt("Enter choice: ", "0");
-  valid = input === "0" || input === "1" || input === "2";
-
-  if (valid) {
-    // playing
-    const userChoice = getChoices()[parseInt(input, 10)];
-    const computerChoice = getComputerChoice();
-    console.log("Playing...");
-    console.log(`User (${userPlayer.score}/2): ${userChoice}`);
-    console.log(`Computer (${computerPlayer.score}/2): ${computerChoice}`);
-    const outcome = getOutcome(userChoice, computerChoice);
-
-    if (outcome === 'won') {
-      userPlayer.incrementScore();
-    } else if (outcome === 'lost') {
-      computerPlayer.incrementScore();
-    }
-
-    // endgame
-    endCondition = userPlayer.score >= 2 || computerPlayer.score >= 2;
-
-    if (endCondition) {
-      console.log(`You ${outcome} the game.`);
-    } else {
-      console.log(`You ${outcome} a round.`);
-    }
-  } else {
-    console.log("Invalid choice.");
+  stats.outcome = getOutcome(getChoices()[index], getComputerChoice());
+  if (stats.outcome === "won") {
+    userPlayer.incrementScore();
+  } else if (stats.outcome === "lost") {
+    computerPlayer.incrementScore();
   }
-} while(!endCondition);
+
+  console.log(userPlayer);
+  console.log(computerPlayer);
+  // endgame
+  stats.endCondition = userPlayer.score >= 2 || computerPlayer.score >= 2;
+
+  if (stats.endCondition) {
+    rockButton.removeEventListener("click", handleRock);
+    rockButton.style.display = "none";
+
+    paperButton.removeEventListener("click", handlePaper);
+    paperButton.style.display = "none";
+
+    scissorsButton.removeEventListener("click", handleScissors);
+    scissorsButton.style.display = "none";
+
+    playButton.innerHTML = "Play again";
+    playButton.style.display = "block";
+    playButton.addEventListener("click", handlePlay);
+
+    statusMessage.innerHTML = `User: ${userPlayer.score}<br />Computer: ${computerPlayer.score}<br />You ${stats.outcome} the game.`;
+
+    // removes won/lost outcome and sets scores to 0
+    resetStats();
+  } else {
+    statusMessage.innerHTML = `User: ${userPlayer.score}<br />Computer: ${computerPlayer.score}<br />You ${stats.outcome} a round.`;
+  }
+}
+
+function play() {
+  const {playButton, statusMessage, rockButton, paperButton, scissorsButton} = elements;
+
+  playButton.removeEventListener("click", handlePlay);
+  playButton.style.display = "none";
+
+  statusMessage.innerHTML = `User: ${userPlayer.score}<br />Computer: ${computerPlayer.score}<br />Computer has joined the game.`;
+
+  rockButton.style.display = "block";
+  rockButton.addEventListener("click", handleRock);
+
+  paperButton.style.display = "block";
+  paperButton.addEventListener("click", handlePaper);
+
+  scissorsButton.style.display = "block";
+  scissorsButton.addEventListener("click", handleScissors);
+}
+
+function resetStats() {
+  stats.endCondition = false;
+  stats.outcome = "";
+  userPlayer.score = 0;
+  computerPlayer.score = 0;
+}
+
+// game and players
+const stats = new GameStats();
+const userPlayer = new Player({isUser: true});
+const computerPlayer = new Player();
+
+// DOM variables
+const elements = {};
+elements.playButton = document.getElementById("play");
+elements.rockButton = document.getElementById("rock");
+elements.paperButton = document.getElementById("paper");
+elements.scissorsButton = document.getElementById("scissors");
+elements.statusMessage = document.getElementById("status");
+
+const handlePlay = () => {
+  play();
+};
+const handleRock = () => {
+  move(0);
+};
+const handlePaper = () => {
+  move(1);
+};
+const handleScissors = () => {
+  move(2);
+};
+
+elements.playButton.style.display = "block";
+elements.playButton.addEventListener("click", handlePlay);
